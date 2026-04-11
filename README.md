@@ -130,15 +130,14 @@ Frontend запустится на `http://localhost:5173`
 ---
 
 ## Скриншоты
-<img width="959" height="424" alt="image" src="https://github.com/user-attachments/assets/7df9dba6-c40e-4fd3-8019-bb42a94b92c7" />
 
 ### Список персонала
 Таблица с подсветкой сотрудников, у которых медосмотр истекает в течение 30 дней.
-
-<img width="959" height="462" alt="image" src="https://github.com/user-attachments/assets/a19e57b3-8b00-4d93-b7df-d2552da702eb" />
+<img width="959" height="424" alt="image" src="https://github.com/user-attachments/assets/7df9dba6-c40e-4fd3-8019-bb42a94b92c7" />
 
 ### Назначение дежурств
 Форма назначения смены с валидацией в реальном времени — красное уведомление при нарушении правил, зелёное при успешном назначении.
+<img width="959" height="462" alt="image" src="https://github.com/user-attachments/assets/a19e57b3-8b00-4d93-b7df-d2552da702eb" />
 
 ---
 
