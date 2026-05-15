@@ -12,7 +12,10 @@ import java.util.List;
 @Repository
 public interface ShiftRepository extends JpaRepository<Shift, Long> {
 
-    // Все смены сотрудника за период (проверка 12 часов делается в Java)
+    // Смены за период (для графика)
+    List<Shift> findByShiftDateBetweenOrderByShiftDateAsc(LocalDate from, LocalDate to);
+
+    // Смены сотрудника за период (для правила 12 часов)
     @Query("SELECT s FROM Shift s " +
            "WHERE s.employee.id = :employeeId " +
            "AND s.status = 'SCHEDULED' " +

@@ -12,6 +12,7 @@ import com.nuclear.backend.repository.ShiftTypeRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -26,18 +27,13 @@ public class ShiftService {
 
     // Назначить смену
     public ShiftResponse createShift(ShiftRequest request) {
-
-        // Находим сотрудника и тип смены
         Employee employee = employeeRepository.findById(request.getEmployeeId())
                 .orElseThrow(() -> new ValidationException("Сотрудник не найден"));
-
         ShiftType shiftType = shiftTypeRepository.findById(request.getShiftTypeId())
                 .orElseThrow(() -> new ValidationException("Тип смены не найден"));
 
-        // ← Весь «мозг» системы — 4 проверки
         validationService.validateShift(employee, shiftType, request.getShiftDate());
 
-        // Валидация пройдена — сохраняем
         Shift shift = new Shift();
         shift.setEmployee(employee);
         shift.setShiftType(shiftType);
@@ -45,8 +41,7 @@ public class ShiftService {
         shift.setNotes(request.getNotes());
         shift.setStatus("SCHEDULED");
 
-        Shift saved = shiftRepository.save(shift);
-        return toResponse(saved);
+        return toResponse(shiftRepository.save(shift));
     }
 
     // Получить все смены
@@ -57,7 +52,14 @@ public class ShiftService {
                 .collect(Collectors.toList());
     }
 
-    // Маппинг Entity → DTO
+    // Получить смены за период (для графика)
+    public List<ShiftResponse> getShiftsByPeriod(LocalDate from, LocalDate to) {
+        return shiftRepository.findByShiftDateBetweenOrderByShiftDateAsc(from, to)
+                .stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+    }
+
     private ShiftResponse toResponse(Shift shift) {
         ShiftResponse response = new ShiftResponse();
         response.setId(shift.getId());
