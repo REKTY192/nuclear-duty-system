@@ -13,6 +13,9 @@ public class EmployeeResponse {
     private LocalDate medicalExpiry;
     private Boolean isActive;
 
-    // Вычисляемое поле — фронт использует его для подсветки
+    // true — медосмотр истекает в течение 30 дней или уже просрочен
     private Boolean medicalExpiringSoon;
+
+    // true — медосмотр уже просрочен (дата в прошлом)
+    private Boolean medicalExpired;
 }

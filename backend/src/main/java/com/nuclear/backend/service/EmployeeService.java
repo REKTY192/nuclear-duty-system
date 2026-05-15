@@ -18,7 +18,6 @@ public class EmployeeService {
 
     private final EmployeeRepository employeeRepository;
 
-    // Получить всех активных сотрудников
     public List<EmployeeResponse> getAllActiveEmployees() {
         return employeeRepository.findByIsActiveTrue()
                 .stream()
@@ -26,7 +25,6 @@ public class EmployeeService {
                 .collect(Collectors.toList());
     }
 
-    // Добавить сотрудника
     public EmployeeResponse createEmployee(EmployeeRequest request) {
         Employee employee = new Employee();
         employee.setFullName(request.getFullName());
@@ -37,7 +35,6 @@ public class EmployeeService {
         return toResponse(employeeRepository.save(employee));
     }
 
-    // Обновить данные сотрудника
     public EmployeeResponse updateEmployee(Long id, EmployeeRequest request) {
         Employee employee = employeeRepository.findById(id)
                 .orElseThrow(() -> new ValidationException("Сотрудник не найден"));
@@ -48,7 +45,6 @@ public class EmployeeService {
         return toResponse(employeeRepository.save(employee));
     }
 
-    // Мягкое удаление — деактивация
     public void deactivateEmployee(Long id) {
         Employee employee = employeeRepository.findById(id)
                 .orElseThrow(() -> new ValidationException("Сотрудник не найден"));
@@ -56,7 +52,6 @@ public class EmployeeService {
         employeeRepository.save(employee);
     }
 
-    // Маппинг Entity → DTO
     private EmployeeResponse toResponse(Employee employee) {
         EmployeeResponse response = new EmployeeResponse();
         response.setId(employee.getId());
@@ -66,9 +61,22 @@ public class EmployeeService {
         response.setMedicalExpiry(employee.getMedicalExpiry());
         response.setIsActive(employee.getIsActive());
 
-        boolean expiringSoon = employee.getMedicalExpiry()
-                .isBefore(LocalDate.now().plusDays(30));
-        response.setMedicalExpiringSoon(expiringSoon);
+        LocalDate today = LocalDate.now();
+        LocalDate expiry = employee.getMedicalExpiry();
+
+        // Просрочен — дата уже прошла
+        if (!expiry.isAfter(today)) {
+            response.setMedicalExpiringSoon(true);
+            response.setMedicalExpired(true);
+        }
+        // Истекает в течение 30 дней
+        else if (expiry.isBefore(today.plusDays(30))) {
+            response.setMedicalExpiringSoon(true);
+            response.setMedicalExpired(false);
+        } else {
+            response.setMedicalExpiringSoon(false);
+            response.setMedicalExpired(false);
+        }
 
         return response;
     }

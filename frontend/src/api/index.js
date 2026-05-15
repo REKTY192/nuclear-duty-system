@@ -12,10 +12,12 @@ export const employeeApi = {
 }
 
 export const shiftApi = {
-  getAll:      () => api.get('/shifts'),
-  create:      (data) => api.post('/shifts', data),
-  getTypes:    () => api.get('/shift-types'),
-  getSchedule: (from, to) => api.get(`/shifts/schedule?from=${from}&to=${to}`)
+  getAll:       () => api.get('/shifts'),
+  create:       (data) => api.post('/shifts', data),
+  remove:       (id) => api.delete(`/shifts/${id}`),
+  updateStatus: (id, status) => api.patch(`/shifts/${id}/status?status=${status}`),
+  getTypes:     () => api.get('/shift-types'),
+  getSchedule:  (from, to) => api.get(`/shifts/schedule?from=${from}&to=${to}`)
 }
 
 export default api

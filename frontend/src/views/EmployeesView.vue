@@ -20,13 +20,15 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-for="emp in employees" :key="emp.id" :class="{ 'row-warning': emp.medicalExpiringSoon }">
+        <tr v-for="emp in employees" :key="emp.id"
+            :class="{ 'row-expired': emp.medicalExpired, 'row-warning': emp.medicalExpiringSoon && !emp.medicalExpired }">
           <td>{{ emp.fullName }}</td>
           <td>{{ emp.position || '—' }}</td>
           <td><span class="badge">{{ emp.clearanceLevel }}</span></td>
           <td>
             {{ formatDate(emp.medicalExpiry) }}
-            <span v-if="emp.medicalExpiringSoon" class="warn-label">⚠ Скоро истекает</span>
+            <span v-if="emp.medicalExpired" class="expired-label">❌ Просрочен</span>
+            <span v-else-if="emp.medicalExpiringSoon" class="warn-label">⚠ Скоро истекает</span>
           </td>
           <td>
             <span :class="emp.isActive ? 'status-active' : 'status-inactive'">
@@ -56,12 +58,10 @@
           <input v-model="form.fullName" type="text" placeholder="Иванов Иван Иванович" />
           <span v-if="formErrors.fullName" class="field-error">{{ formErrors.fullName }}</span>
         </div>
-
         <div class="form-group">
           <label>Должность</label>
           <input v-model="form.position" type="text" placeholder="Оператор реакторного отделения" />
         </div>
-
         <div class="form-group">
           <label>Уровень допуска * (1–3)</label>
           <select v-model="form.clearanceLevel">
@@ -72,7 +72,6 @@
           </select>
           <span v-if="formErrors.clearanceLevel" class="field-error">{{ formErrors.clearanceLevel }}</span>
         </div>
-
         <div class="form-group">
           <label>Медосмотр действителен до *</label>
           <input v-model="form.medicalExpiry" type="date" />
@@ -104,7 +103,6 @@
         </div>
       </div>
     </div>
-
   </div>
 </template>
 
@@ -123,16 +121,9 @@ const saving = ref(false)
 const modalError = ref('')
 const formErrors = ref({})
 
-const form = ref({
-  fullName: '',
-  position: '',
-  clearanceLevel: '',
-  medicalExpiry: ''
-})
+const form = ref({ fullName: '', position: '', clearanceLevel: '', medicalExpiry: '' })
 
-onMounted(async () => {
-  await loadEmployees()
-})
+onMounted(loadEmployees)
 
 async function loadEmployees() {
   try {
@@ -155,21 +146,13 @@ function openAddModal() {
 
 function openEditModal(emp) {
   editingEmployee.value = emp
-  form.value = {
-    fullName: emp.fullName,
-    position: emp.position || '',
-    clearanceLevel: emp.clearanceLevel,
-    medicalExpiry: emp.medicalExpiry
-  }
+  form.value = { fullName: emp.fullName, position: emp.position || '', clearanceLevel: emp.clearanceLevel, medicalExpiry: emp.medicalExpiry }
   formErrors.value = {}
   modalError.value = ''
   showModal.value = true
 }
 
-function closeModal() {
-  showModal.value = false
-  editingEmployee.value = null
-}
+function closeModal() { showModal.value = false; editingEmployee.value = null }
 
 function validateForm() {
   const errors = {}
@@ -185,12 +168,7 @@ async function saveEmployee() {
   saving.value = true
   modalError.value = ''
   try {
-    const payload = {
-      fullName: form.value.fullName,
-      position: form.value.position,
-      clearanceLevel: Number(form.value.clearanceLevel),
-      medicalExpiry: form.value.medicalExpiry
-    }
+    const payload = { fullName: form.value.fullName, position: form.value.position, clearanceLevel: Number(form.value.clearanceLevel), medicalExpiry: form.value.medicalExpiry }
     if (editingEmployee.value) {
       await employeeApi.update(editingEmployee.value.id, payload)
     } else {
@@ -205,10 +183,7 @@ async function saveEmployee() {
   }
 }
 
-function confirmDelete(emp) {
-  deletingEmployee.value = emp
-  showDeleteModal.value = true
-}
+function confirmDelete(emp) { deletingEmployee.value = emp; showDeleteModal.value = true }
 
 async function deleteEmployee() {
   saving.value = true
@@ -216,8 +191,6 @@ async function deleteEmployee() {
     await employeeApi.remove(deletingEmployee.value.id)
     showDeleteModal.value = false
     await loadEmployees()
-  } catch (e) {
-    showDeleteModal.value = false
   } finally {
     saving.value = false
   }
@@ -231,129 +204,48 @@ function formatDate(dateStr) {
 </script>
 
 <style scoped>
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
+.page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
 .page-title { font-size: 22px; font-weight: 700; color: #1a1a2e; }
-
-.btn-primary {
-  background: #1a1a2e;
-  color: white;
-  border: none;
-  padding: 9px 20px;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.2s;
-}
+.btn-primary { background: #1a1a2e; color: white; border: none; padding: 9px 20px; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; }
 .btn-primary:hover:not(:disabled) { background: #2d2d4e; }
 .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
-
-.btn-secondary {
-  background: #f0f0f0;
-  color: #333;
-  border: none;
-  padding: 9px 20px;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-}
+.btn-secondary { background: #f0f0f0; color: #333; border: none; padding: 9px 20px; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; }
 .btn-secondary:hover { background: #e0e0e0; }
-
-.table {
-  width: 100%;
-  border-collapse: collapse;
-  background: white;
-  border-radius: 10px;
-  overflow: hidden;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-}
-.table th {
-  background: #1a1a2e;
-  color: white;
-  padding: 12px 16px;
-  text-align: left;
-  font-size: 13px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
+.table { width: 100%; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+.table th { background: #1a1a2e; color: white; padding: 12px 16px; text-align: left; font-size: 13px; font-weight: 600; text-transform: uppercase; }
 .table td { padding: 12px 16px; border-bottom: 1px solid #f0f0f0; font-size: 14px; }
 .table tbody tr:hover { background: #fafafa; }
 .row-warning { background: #fff8e1 !important; }
 .row-warning:hover { background: #fff3cd !important; }
-
+.row-expired { background: #ffebee !important; }
+.row-expired:hover { background: #ffcdd2 !important; }
 .warn-label { color: #e65100; font-size: 12px; font-weight: 600; margin-left: 6px; }
+.expired-label { color: #c62828; font-size: 12px; font-weight: 600; margin-left: 6px; }
 .badge { background: #1a1a2e; color: #4fc3f7; padding: 2px 10px; border-radius: 12px; font-size: 13px; font-weight: 700; }
 .status-active { background: #e8f5e9; color: #2e7d32; padding: 3px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; }
 .status-inactive { background: #ffebee; color: #c62828; padding: 3px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; }
-
 .action-btns { display: flex; gap: 8px; }
 .btn-edit { background: #e3f2fd; color: #1565c0; border: none; padding: 5px 12px; border-radius: 5px; font-size: 13px; cursor: pointer; }
 .btn-edit:hover { background: #bbdefb; }
 .btn-delete { background: #ffebee; color: #c62828; border: none; padding: 5px 12px; border-radius: 5px; font-size: 13px; cursor: pointer; }
 .btn-delete:hover { background: #ffcdd2; }
-
-/* Модальное окно */
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 100;
-}
-.modal {
-  background: white;
-  border-radius: 12px;
-  padding: 32px;
-  width: 480px;
-  max-width: 95vw;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.2);
-}
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 100; }
+.modal { background: white; border-radius: 12px; padding: 32px; width: 480px; max-width: 95vw; box-shadow: 0 8px 32px rgba(0,0,0,0.2); }
 .modal-sm { width: 380px; }
 .modal-title { font-size: 20px; font-weight: 700; color: #1a1a2e; margin-bottom: 24px; }
-
 .form-group { margin-bottom: 16px; display: flex; flex-direction: column; gap: 6px; }
 .form-group label { font-size: 13px; font-weight: 600; color: #555; }
-.form-group input, .form-group select {
-  padding: 9px 12px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  font-size: 14px;
-  outline: none;
-  transition: border 0.2s;
-}
+.form-group input, .form-group select { padding: 9px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; outline: none; }
 .form-group input:focus, .form-group select:focus { border-color: #4fc3f7; }
 .field-error { color: #c62828; font-size: 12px; }
-
 .alert { padding: 10px 14px; border-radius: 6px; font-size: 13px; margin-bottom: 12px; }
 .alert-error { background: #ffebee; color: #c62828; border: 1px solid #ffcdd2; }
-
 .modal-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px; }
-
 .delete-text { font-size: 15px; color: #333; margin-bottom: 8px; line-height: 1.5; }
 .delete-hint { font-size: 13px; color: #888; }
-.btn-delete-confirm {
-  background: #c62828;
-  color: white;
-  border: none;
-  padding: 9px 20px;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-}
+.btn-delete-confirm { background: #c62828; color: white; border: none; padding: 9px 20px; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; }
 .btn-delete-confirm:hover:not(:disabled) { background: #b71c1c; }
 .btn-delete-confirm:disabled { opacity: 0.6; cursor: not-allowed; }
-
 .state-msg { padding: 24px; text-align: center; color: #666; }
 .state-msg.error { color: #c62828; }
 .empty { text-align: center; color: #999; padding: 32px; }

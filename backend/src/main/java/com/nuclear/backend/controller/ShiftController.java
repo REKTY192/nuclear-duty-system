@@ -19,13 +19,11 @@ public class ShiftController {
 
     private final ShiftService shiftService;
 
-    // GET /api/shifts — список всех смен
     @GetMapping
     public ResponseEntity<List<ShiftResponse>> getAllShifts() {
         return ResponseEntity.ok(shiftService.getAllShifts());
     }
 
-    // GET /api/shifts/schedule?from=2026-04-01&to=2026-04-30 — график за период
     @GetMapping("/schedule")
     public ResponseEntity<List<ShiftResponse>> getSchedule(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
@@ -33,10 +31,23 @@ public class ShiftController {
         return ResponseEntity.ok(shiftService.getShiftsByPeriod(from, to));
     }
 
-    // POST /api/shifts — назначить смену (с валидацией)
     @PostMapping
     public ResponseEntity<ShiftResponse> createShift(@Valid @RequestBody ShiftRequest request) {
-        ShiftResponse response = shiftService.createShift(request);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(shiftService.createShift(request));
+    }
+
+    // DELETE /api/shifts/{id} — удалить смену
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteShift(@PathVariable Long id) {
+        shiftService.deleteShift(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    // PATCH /api/shifts/{id}/status?status=COMPLETED — изменить статус
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<ShiftResponse> updateStatus(
+            @PathVariable Long id,
+            @RequestParam String status) {
+        return ResponseEntity.ok(shiftService.updateShiftStatus(id, status));
     }
 }

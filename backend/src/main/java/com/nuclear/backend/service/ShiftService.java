@@ -25,7 +25,6 @@ public class ShiftService {
     private final ShiftTypeRepository shiftTypeRepository;
     private final ValidationService validationService;
 
-    // Назначить смену
     public ShiftResponse createShift(ShiftRequest request) {
         Employee employee = employeeRepository.findById(request.getEmployeeId())
                 .orElseThrow(() -> new ValidationException("Сотрудник не найден"));
@@ -44,7 +43,6 @@ public class ShiftService {
         return toResponse(shiftRepository.save(shift));
     }
 
-    // Получить все смены
     public List<ShiftResponse> getAllShifts() {
         return shiftRepository.findAll()
                 .stream()
@@ -52,12 +50,31 @@ public class ShiftService {
                 .collect(Collectors.toList());
     }
 
-    // Получить смены за период (для графика)
     public List<ShiftResponse> getShiftsByPeriod(LocalDate from, LocalDate to) {
         return shiftRepository.findByShiftDateBetweenOrderByShiftDateAsc(from, to)
                 .stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
+    }
+
+    // Удалить смену
+    public void deleteShift(Long id) {
+        Shift shift = shiftRepository.findById(id)
+                .orElseThrow(() -> new ValidationException("Смена не найдена"));
+        shiftRepository.delete(shift);
+    }
+
+    // Изменить статус смены
+    public ShiftResponse updateShiftStatus(Long id, String status) {
+        Shift shift = shiftRepository.findById(id)
+                .orElseThrow(() -> new ValidationException("Смена не найдена"));
+
+        if (!List.of("SCHEDULED", "COMPLETED", "CANCELLED").contains(status)) {
+            throw new ValidationException("Недопустимый статус: " + status);
+        }
+
+        shift.setStatus(status);
+        return toResponse(shiftRepository.save(shift));
     }
 
     private ShiftResponse toResponse(Shift shift) {
